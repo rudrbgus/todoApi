@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.study.todoapi.todo.dto.request.TodoCheckRequestDTO;
 import org.study.todoapi.todo.dto.response.TodoDetailResponseDTO;
 import org.study.todoapi.todo.dto.response.TodoListResponseDTO;
 import org.study.todoapi.todo.entity.Todo;
 import org.study.todoapi.todo.repository.TodoRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -44,6 +46,17 @@ public class TodoService {
             log.error("id가 존재하지 않아 삭제에 실패했습니다. - ID: {}", id, e.getMessage());
             throw new RuntimeException("삭제에 실패했습니다.");
         }
+        return retrieve();
+    }
+
+    // 할 일 체크 처리
+    public TodoListResponseDTO check(TodoCheckRequestDTO dto){
+        Optional<Todo> target = todoRepository.findById(dto.getId());
+        target.ifPresent(todo ->{
+            todo.setDone(dto.isDone());
+            todoRepository.save(todo);
+        });
+
         return retrieve();
     }
 }
