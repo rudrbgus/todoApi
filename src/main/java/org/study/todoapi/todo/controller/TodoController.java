@@ -22,7 +22,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/api/todos")
-@CrossOrigin(origins = {"http://localhost:3000"})
+//@CrossOrigin(origins = {"http://localhost:3000"})
 public class TodoController {
 
     private final TodoService todoService;

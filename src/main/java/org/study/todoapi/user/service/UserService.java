@@ -5,9 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.study.todoapi.auth.TokenProvider;
 import org.study.todoapi.exception.DuplicateEmailException;
 import org.study.todoapi.exception.NoRegisteredArgumentsException;
+import org.study.todoapi.user.dto.request.LoginRequestDTO;
 import org.study.todoapi.user.dto.request.UserSignUpRequestDTO;
+import org.study.todoapi.user.dto.response.LoginResponseDTO;
 import org.study.todoapi.user.dto.response.UserSignUpResponseDTO;
 import org.study.todoapi.user.entity.User;
 import org.study.todoapi.user.repository.UserRepository;
@@ -19,6 +22,7 @@ import org.study.todoapi.user.repository.UserRepository;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TokenProvider tokenProvider;
 
 
     // 회원가입 처리
@@ -41,6 +45,30 @@ public class UserService {
     // 이메일 중복 확인
     public boolean isDuplicateEmail(String email){
         return userRepository.existsByEmail(email);
+    }
+
+    // 회원 인증( login )
+    public LoginResponseDTO authenticate(final LoginRequestDTO dto){  // 안정성 추가
+
+        // 이메일을 통해 회원정보 조회
+        User user = userRepository.findByEmail(dto.getEmail()).orElseThrow(
+                () -> new RuntimeException("가입된 회원이 아닙니다!")
+        );
+
+        // 패스워드 검증
+        String inputPassword = dto.getPassword(); // 입력 비번
+        String encodedPassword = user.getPassword();
+
+        if(!passwordEncoder.matches(inputPassword, encodedPassword)){
+            throw new RuntimeException("비밀번호가 틀렸습니다.");
+        }
+
+        // 로그인 성공 후 이제 어떻게 할 것인가 세션에 저장할 것인가 토큰을 발급할 것인가.
+        String token = tokenProvider.createToken(user);
+
+        // 클라이언트에게 토큰을 발급해서 제공
+        return new LoginResponseDTO(user, token);
+
     }
 
 }

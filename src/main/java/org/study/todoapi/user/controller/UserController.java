@@ -3,13 +3,16 @@ package org.study.todoapi.user.controller;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.study.todoapi.exception.DuplicateEmailException;
 import org.study.todoapi.exception.NoRegisteredArgumentsException;
+import org.study.todoapi.user.dto.request.LoginRequestDTO;
 import org.study.todoapi.user.dto.request.UserSignUpRequestDTO;
+import org.study.todoapi.user.dto.response.LoginResponseDTO;
 import org.study.todoapi.user.dto.response.UserSignUpResponseDTO;
 import org.study.todoapi.user.service.UserService;
 
@@ -52,5 +55,18 @@ public class UserController {
         log.debug("{} 중복?? -{}", email, flag);
 
         return ResponseEntity.ok().body(flag);
+    }
+
+    // 로그인
+    @PostMapping("/signin")
+    public ResponseEntity<?> signIn(@Validated @RequestBody LoginRequestDTO dto, BindingResult result){
+        try{
+            LoginResponseDTO authenticate = userService.authenticate(dto);
+            log.info("login success !! by {}", authenticate.getEmail());
+            return ResponseEntity.ok().body(authenticate);
+        }catch (RuntimeException e){
+            log.warn(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
