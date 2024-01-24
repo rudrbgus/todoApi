@@ -5,9 +5,12 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
+import org.study.todoapi.todo.entity.Todo;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Setter@Getter@NoArgsConstructor@AllArgsConstructor
 @EqualsAndHashCode@ToString
@@ -34,6 +37,10 @@ public class User {
     private LocalDateTime joinDate;
 
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'COMMON'")
-    private Role role;
+    //@ColumnDefault("'COMMON'") -> 작동 안함
+    @Builder.Default
+    private Role role = Role.COMMON;
+
+    @OneToMany(mappedBy = "user") // <= 원 투 매니는 LAZY가 기본값
+    private List<Todo> todo = new ArrayList<>();
 }
