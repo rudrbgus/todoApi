@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
+import org.springframework.transaction.annotation.Transactional;
 import org.study.todoapi.todo.entity.Todo;
 
 import javax.persistence.*;
@@ -12,8 +13,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Setter@Getter@NoArgsConstructor@AllArgsConstructor
-@EqualsAndHashCode@ToString
+@Setter
+@ToString(exclude = "todoList")
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 @Builder
 @Entity
 @Table(name = "tbl_user")
@@ -42,5 +47,11 @@ public class User {
     private Role role = Role.COMMON;
 
     @OneToMany(mappedBy = "user") // <= 원 투 매니는 LAZY가 기본값
-    private List<Todo> todo = new ArrayList<>();
+    private List<Todo> todoList = new ArrayList<>();
+
+    @Transactional
+    public void addTodo(Todo save) {
+        todoList.add(save);
+        save.setUser(this);
+    }
 }
