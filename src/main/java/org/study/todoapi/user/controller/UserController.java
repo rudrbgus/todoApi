@@ -5,9 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.study.todoapi.auth.TokenUserInfo;
 import org.study.todoapi.exception.DuplicateEmailException;
 import org.study.todoapi.exception.NoRegisteredArgumentsException;
 import org.study.todoapi.user.dto.request.LoginRequestDTO;
@@ -69,4 +72,29 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    // 일반회원을 프리미엄으로 상승시키는 요청 처리
+    @PutMapping("/promote")
+    // 그냥 이 권한을 가진 사람만 이 요청을 수행할 수 있고
+    // 이 권한이 아닌 유저는 강제로 403이 응답됨
+    @PreAuthorize("hasRole('ROLE_COMMON')")
+//    @PreAuthorize("hasRole('ROLE_COMMON') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> promote(
+            @AuthenticationPrincipal TokenUserInfo tokenUserInfo
+    ){
+        log.info("/api/auth/promote PUT");
+        try{
+            LoginResponseDTO loginResponseDTO = userService.promoteToPremium(tokenUserInfo);
+            return ResponseEntity.ok().body(loginResponseDTO);
+        }catch (IllegalStateException e){
+            e.printStackTrace();
+            log.warn(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }catch (Exception e){
+            log.warn(e.getMessage());
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+
+    }
+
 }

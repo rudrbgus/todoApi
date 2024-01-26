@@ -6,12 +6,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.study.todoapi.auth.TokenProvider;
+import org.study.todoapi.auth.TokenUserInfo;
 import org.study.todoapi.exception.DuplicateEmailException;
 import org.study.todoapi.exception.NoRegisteredArgumentsException;
 import org.study.todoapi.user.dto.request.LoginRequestDTO;
 import org.study.todoapi.user.dto.request.UserSignUpRequestDTO;
 import org.study.todoapi.user.dto.response.LoginResponseDTO;
 import org.study.todoapi.user.dto.response.UserSignUpResponseDTO;
+import org.study.todoapi.user.entity.Role;
 import org.study.todoapi.user.entity.User;
 import org.study.todoapi.user.repository.UserRepository;
 
@@ -69,6 +71,24 @@ public class UserService {
         // 클라이언트에게 토큰을 발급해서 제공
         return new LoginResponseDTO(user, token);
 
+    }
+
+    // 등급 업 처리
+    public LoginResponseDTO promoteToPremium(TokenUserInfo userInfo){
+        User user = userRepository.findByEmail(userInfo.getEmail()).orElseThrow(() -> new NoRegisteredArgumentsException("가입된 회원이 아닙니다."));
+        // 이미 프리미엄 회원이거나 관리자면 예외 발생
+//        if(user.getRole() != Role.COMMON) throw new IllegalStateException("일반 회원이 아니면 승격할 수 없습니다.");
+        // 등급 변경
+        user.setRole(Role.PREMIUM);
+
+        // 다시 저장
+        User saved = userRepository.save(user);
+
+        // 토큰을 재발급
+        String token = tokenProvider.createToken(user);
+
+
+        return new LoginResponseDTO(saved,token);
     }
 
 }
